@@ -47,20 +47,46 @@ function bindElements() {
 }
 
 function renderLoadingRows() {
-  const rows = Array.from({ length: 5 }, (_, index) => `
-    <div class="skeleton-row" aria-hidden="true">
-      <div class="skel icon"></div>
-      <div style="flex:1;display:flex;flex-direction:column;gap:4px">
-        <div class="skel line" style="width:${55 + index * 5}%"></div>
-        <div style="display:flex;gap:5px;align-items:center">
-          <div class="skel dot"></div>
-          <div class="skel line" style="width:${20 + index * 6}%"></div>
-        </div>
-      </div>
-    </div>
-  `).join("");
+  const rows = Array.from({ length: 5 }, (_, index) => {
+    const row = document.createElement("div");
+    row.className = "skeleton-row";
+    row.setAttribute("aria-hidden", "true");
 
-  elements.loadingRows.innerHTML = rows;
+    const icon = document.createElement("div");
+    icon.className = "skel icon";
+    row.append(icon);
+
+    const body = document.createElement("div");
+    body.style.flex = "1";
+    body.style.display = "flex";
+    body.style.flexDirection = "column";
+    body.style.gap = "4px";
+
+    const title = document.createElement("div");
+    title.className = "skel line";
+    title.style.width = `${55 + index * 5}%`;
+    body.append(title);
+
+    const meta = document.createElement("div");
+    meta.style.display = "flex";
+    meta.style.gap = "5px";
+    meta.style.alignItems = "center";
+
+    const dot = document.createElement("div");
+    dot.className = "skel dot";
+    meta.append(dot);
+
+    const line = document.createElement("div");
+    line.className = "skel line";
+    line.style.width = `${20 + index * 6}%`;
+    meta.append(line);
+
+    body.append(meta);
+    row.append(body);
+    return row;
+  });
+
+  elements.loadingRows.replaceChildren(...rows);
 }
 
 function formatFooter() {
@@ -97,58 +123,132 @@ function getVisibleWorkflows() {
   });
 }
 
-function makeSpinnerSvg() {
-  return `<svg class="spinner" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="rgba(255,255,255,.2)" stroke-width="1.5"></circle><path d="M6 1.5A4.5 4.5 0 0 1 10.5 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>`;
+function createSvgElement(tagName, attrs = {}) {
+  const element = document.createElementNS("http://www.w3.org/2000/svg", tagName);
+  Object.entries(attrs).forEach(([name, value]) => {
+    element.setAttribute(name, value);
+  });
+  return element;
 }
 
-function makePlaySvg() {
-  return `<svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2.5 1.5L8 5 2.5 8.5V1.5Z"></path></svg>`;
+function createSpinnerSvg() {
+  const svg = createSvgElement("svg", {
+    class: "spinner",
+    viewBox: "0 0 12 12",
+    fill: "none"
+  });
+
+  svg.append(createSvgElement("circle", {
+    cx: "6",
+    cy: "6",
+    r: "4.5",
+    stroke: "rgba(255,255,255,.2)",
+    "stroke-width": "1.5"
+  }));
+  svg.append(createSvgElement("path", {
+    d: "M6 1.5A4.5 4.5 0 0 1 10.5 6",
+    stroke: "currentColor",
+    "stroke-width": "1.5",
+    "stroke-linecap": "round"
+  }));
+
+  return svg;
 }
 
-function makeExternalSvg() {
-  return `<svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2H2a.5.5 0 0 0-.5.5v5.5c0 .28.22.5.5.5h5.5A.5.5 0 0 0 8 8V6M6 2h2v2M8 2 4.5 5.5"></path></svg>`;
+function createPlaySvg() {
+  const svg = createSvgElement("svg", {
+    width: "10",
+    height: "10",
+    viewBox: "0 0 10 10",
+    fill: "currentColor"
+  });
+
+  svg.append(createSvgElement("path", {
+    d: "M2.5 1.5L8 5 2.5 8.5V1.5Z"
+  }));
+
+  return svg;
+}
+
+function createExternalSvg() {
+  const svg = createSvgElement("svg", {
+    width: "10",
+    height: "10",
+    viewBox: "0 0 10 10",
+    fill: "none",
+    stroke: "currentColor",
+    "stroke-width": "1.3",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+  });
+
+  svg.append(createSvgElement("path", {
+    d: "M4 2H2a.5.5 0 0 0-.5.5v5.5c0 .28.22.5.5.5h5.5A.5.5 0 0 0 8 8V6M6 2h2v2M8 2 4.5 5.5"
+  }));
+
+  return svg;
+}
+
+function createWorkflowRow(workflow, type) {
+  const statusLabel = workflow.active ? "active" : "inactive";
+  const rowType = type === "launch" ? "launchable" : "linkonly";
+  const running = state.runningWorkflowIds.has(workflow.id);
+  const row = document.createElement("div");
+  row.className = `wf-row ${rowType}${running ? " running" : ""}`;
+  row.setAttribute("role", "listitem");
+  row.tabIndex = 0;
+  row.dataset.workflowId = String(workflow.id);
+  row.setAttribute(
+    "aria-label",
+    `${workflow.name}, ${statusLabel}, ${type === "launch" ? "launchable" : "opens in n8n"}`
+  );
+
+  const icon = document.createElement("div");
+  icon.className = `wf-icon ${type === "launch" ? "launch" : "link"}`;
+  icon.setAttribute("aria-hidden", "true");
+  icon.append(type === "launch" ? createPlaySvg() : createExternalSvg());
+
+  const body = document.createElement("div");
+  body.className = "wf-body";
+
+  const name = document.createElement("div");
+  name.className = "wf-name";
+  name.textContent = workflow.name;
+
+  const meta = document.createElement("div");
+  meta.className = "wf-meta";
+
+  const statusDot = document.createElement("div");
+  statusDot.className = `status-dot ${statusLabel}`;
+
+  const tags = document.createElement("div");
+  tags.className = "wf-tags";
+  workflow.tags.slice(0, 3).forEach((tag) => {
+    const tagElement = document.createElement("span");
+    tagElement.className = "tag";
+    tagElement.textContent = tag;
+    tags.append(tagElement);
+  });
+
+  meta.append(statusDot, tags);
+  body.append(name, meta);
+
+  const action = document.createElement("div");
+  action.className = "wf-action";
+  action.setAttribute("aria-hidden", "true");
+  action.append(running ? createSpinnerSvg() : (type === "launch" ? createPlaySvg() : createExternalSvg()));
+
+  row.append(icon, body, action);
+  return row;
 }
 
 function renderRows(container, workflows, type) {
   if (workflows.length === 0) {
-    container.innerHTML = "";
+    container.replaceChildren();
     return;
   }
 
-  container.innerHTML = workflows.map((workflow) => {
-    const statusLabel = workflow.active ? "active" : "inactive";
-    const rowType = type === "launch" ? "launchable" : "linkonly";
-    const running = state.runningWorkflowIds.has(workflow.id);
-    const tags = workflow.tags
-      .slice(0, 3)
-      .map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`)
-      .join("");
-    const actionIcon = running
-      ? makeSpinnerSvg()
-      : (type === "launch" ? makePlaySvg() : makeExternalSvg());
-
-    return `
-      <div
-        class="wf-row ${rowType} ${running ? "running" : ""}"
-        role="listitem"
-        tabindex="0"
-        data-workflow-id="${escapeHtml(String(workflow.id))}"
-        aria-label="${escapeHtml(workflow.name)}, ${statusLabel}, ${type === "launch" ? "launchable" : "opens in n8n"}"
-      >
-        <div class="wf-icon ${type === "launch" ? "launch" : "link"}" aria-hidden="true">
-          ${type === "launch" ? makePlaySvg() : makeExternalSvg()}
-        </div>
-        <div class="wf-body">
-          <div class="wf-name">${escapeHtml(workflow.name)}</div>
-          <div class="wf-meta">
-            <div class="status-dot ${statusLabel}"></div>
-            <div class="wf-tags">${tags}</div>
-          </div>
-        </div>
-        <div class="wf-action" aria-hidden="true">${actionIcon}</div>
-      </div>
-    `;
-  }).join("");
+  container.replaceChildren(...workflows.map((workflow) => createWorkflowRow(workflow, type)));
 }
 
 function render() {
@@ -376,15 +476,6 @@ function onListKeydown(event) {
 
   event.preventDefault();
   void handleWorkflowAction(row.dataset.workflowId);
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll("\"", "&quot;")
-    .replaceAll("'", "&#39;");
 }
 
 function attachEvents() {

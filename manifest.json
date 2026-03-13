@@ -38,8 +38,9 @@
     "gecko": {
       "id": "n8n-sidebar-launcher@example.com",
       "data_collection_permissions": {
-        "required": [],
-        "optional": []
+        "required": [
+          "none"
+        ]
       }
     }
   }

@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "n8n Sidebar Launcher",
+  "version": "0.1.0",
+  "description": "Browse n8n workflows from the Firefox sidebar and launch webhook-based workflows in one click.",
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "sidebar_action": {
+    "default_title": "n8n workflows",
+    "default_panel": "sidebar.html",
+    "default_icon": {
+      "16": "assets/icon-16.png",
+      "32": "assets/icon-32.png",
+      "48": "assets/icon-48.png"
+    }
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "icons": {
+    "16": "assets/icon-16.png",
+    "32": "assets/icon-32.png",
+    "48": "assets/icon-48.png",
+    "96": "assets/icon-96.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "n8n-sidebar-launcher@example.com"
+    }
+  }
+}

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>n8n Sidebar Launcher Settings</title>
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <main class="page">
+      <section class="card">
+        <div class="card-head">
+          <img class="logo" src="assets/icon.svg" alt="">
+          <div>
+            <h1>n8n Sidebar Launcher</h1>
+            <p>Configure the Firefox sidebar connection to your n8n instance.</p>
+          </div>
+        </div>
+
+        <form id="settings-form" class="form">
+          <label class="field">
+            <span>n8n base URL</span>
+            <input id="base-url" name="baseUrl" type="url" placeholder="http://localhost:5678" autocomplete="off" required>
+          </label>
+
+          <label class="field">
+            <span>API key</span>
+            <input id="api-key" name="apiKey" type="password" placeholder="n8n_api_…" autocomplete="off" required>
+          </label>
+
+          <label class="field">
+            <span>Refresh interval</span>
+            <input id="refresh-interval" name="refreshInterval" type="number" min="0" max="3600" step="10" value="60">
+            <small>Seconds. Set to 0 for manual refresh only.</small>
+          </label>
+
+          <div class="hint">
+            Launchable workflows are active workflows with at least one webhook node. Everything else opens in n8n.
+          </div>
+
+          <div class="actions">
+            <button type="submit">Save settings</button>
+          </div>
+        </form>
+
+        <p class="status" id="status" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <script src="options.js"></script>
+  </body>
+</html>

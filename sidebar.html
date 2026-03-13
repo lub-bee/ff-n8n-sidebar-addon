@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>n8n workflows</title>
+    <link rel="stylesheet" href="sidebar.css">
+  </head>
+  <body>
+    <div id="app">
+      <div class="header">
+        <div class="header-left">
+          <div class="logo" aria-hidden="true">
+            <img src="assets/icon.svg" alt="">
+          </div>
+          <span class="header-title">n8n workflows</span>
+        </div>
+        <div class="header-right">
+          <button class="icon-btn" id="settings-button" title="Settings" aria-label="Open settings">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <path d="M6.5 8a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" stroke="currentColor" stroke-width="1.2"/>
+              <path d="M10.5 6.5a4 4 0 0 0-.06-.67l1.1-.87-.9-1.56-1.3.52A4 4 0 0 0 8 3.26V1.9H6v1.36a4 4 0 0 0-1.34.66l-1.3-.52-.9 1.56 1.1.87A4.1 4.1 0 0 0 3.5 6.5c0 .23.02.45.06.67l-1.1.87.9 1.56 1.3-.52A4 4 0 0 0 6 9.74V11h2V9.74a4 4 0 0 0 1.34-.66l1.3.52.9-1.56-1.1-.87c.04-.22.06-.44.06-.67Z" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="search-bar" id="search-bar">
+        <input class="search-input" id="search-input" type="text" placeholder="Filter workflows…" aria-label="Filter workflows">
+      </div>
+
+      <div class="error-panel" id="error-panel" role="alert">
+        <div class="error-panel-title" id="error-title">Cannot reach n8n API</div>
+        <div id="error-message">Check your base URL and API key in settings.</div>
+        <div class="error-panel-detail" id="error-detail"></div>
+      </div>
+
+      <div class="list" id="list-view" role="list" aria-label="Workflows">
+        <div class="section-label">Launchable</div>
+        <div id="launch-rows"></div>
+        <div class="divider" id="list-divider"></div>
+        <div class="section-label">Opens in n8n</div>
+        <div id="link-rows"></div>
+      </div>
+
+      <div class="list" id="loading-view" hidden>
+        <div class="section-label">Loading…</div>
+        <div id="loading-rows"></div>
+      </div>
+
+      <div class="empty-state" id="empty-view" hidden>
+        <div class="empty-icon" aria-hidden="true">○</div>
+        <div class="empty-text" id="empty-text">No workflows found.</div>
+      </div>
+
+      <div class="footer">
+        <div class="conn-dot" id="conn-dot"></div>
+        <span class="footer-text" id="footer-text">Not connected</span>
+        <button class="footer-refresh" id="refresh-button" title="Refresh" aria-label="Refresh workflows">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M10 6a4 4 0 1 1-.5-2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+            <path d="M10 2v2H8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="toast" id="toast" role="status" aria-live="polite">
+        <div class="toast-dot"></div>
+        <div class="toast-body">
+          <div id="toast-msg"></div>
+          <div class="toast-detail" id="toast-detail"></div>
+        </div>
+      </div>
+
+      <div class="settings-screen" id="settings-screen" role="dialog" aria-label="Settings" aria-modal="true">
+        <div class="settings-header">
+          <button class="settings-back" id="settings-close-button" aria-label="Back">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <path d="M8 10.5L3.5 6.5 8 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <span class="settings-title">Settings</span>
+        </div>
+        <form class="settings-body" id="settings-form">
+          <div class="field-group">
+            <label class="field-label" for="url-input">n8n base URL</label>
+            <input class="field-input" id="url-input" name="baseUrl" type="url" placeholder="http://localhost:5678" autocomplete="off">
+            <span class="field-hint">Without trailing slash</span>
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="key-input">API key</label>
+            <input class="field-input" id="key-input" name="apiKey" type="password" placeholder="n8n_api_…" autocomplete="off">
+          </div>
+          <div class="launchable-hint">
+            <strong>Launchable workflows</strong> are active workflows that expose at least one webhook node. A click triggers the first webhook. Others open in your browser.
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="poll-input">Refresh interval</label>
+            <input class="field-input system-font" id="poll-input" name="refreshInterval" type="number" min="0" max="3600" step="10">
+            <span class="field-hint">Seconds. 0 = manual only.</span>
+          </div>
+        </form>
+        <div class="settings-footer">
+          <button class="save-btn" id="save-settings-button" type="submit" form="settings-form">Save &amp; reconnect</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="sidebar.js"></script>
+  </body>
+</html>

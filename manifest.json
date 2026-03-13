@@ -28,10 +28,6 @@
     "page": "options.html",
     "open_in_tab": true
   },
-  "data_collection_permissions": {
-    "required": [],
-    "optional": []
-  },
   "icons": {
     "16": "assets/icon-16.png",
     "32": "assets/icon-32.png",
@@ -40,7 +36,11 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "n8n-sidebar-launcher@example.com"
+      "id": "n8n-sidebar-launcher@example.com",
+      "data_collection_permissions": {
+        "required": [],
+        "optional": []
+      }
     }
   }
 }

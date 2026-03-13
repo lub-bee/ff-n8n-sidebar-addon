@@ -80,9 +80,9 @@ function summarizeWorkflow(rawWorkflow, baseUrl) {
     ? rawWorkflow.tags.map(normalizeTag).filter(Boolean)
     : [];
 
-  const webhookCount = Array.isArray(rawWorkflow?.nodes)
-    ? extractWebhookCandidates(rawWorkflow).length
-    : 0;
+  const directAction = Array.isArray(rawWorkflow?.nodes)
+    ? detectDirectAction(rawWorkflow, baseUrl)
+    : null;
 
   return {
     id: rawWorkflow.id,
@@ -90,8 +90,9 @@ function summarizeWorkflow(rawWorkflow, baseUrl) {
     active: Boolean(rawWorkflow.active),
     tags,
     updatedAt: rawWorkflow.updatedAt || rawWorkflow.updated_at || null,
-    launchable: Boolean(rawWorkflow.active) && webhookCount > 0,
-    webhookCount,
+    launchable: Boolean(rawWorkflow.active) && Boolean(directAction),
+    launchMode: directAction?.mode || "open",
+    launchLabel: directAction?.label || "Open in n8n",
     url: workflowUrl(baseUrl, rawWorkflow.id)
   };
 }
@@ -213,6 +214,10 @@ function cleanWebhookPath(pathValue) {
   return String(pathValue || "").trim().replace(/^\/+/, "");
 }
 
+function cleanPublicPath(pathValue) {
+  return String(pathValue || "").trim().replace(/^\/+/, "").replace(/\/+$/, "");
+}
+
 function extractWebhookCandidates(workflow) {
   if (!Array.isArray(workflow?.nodes)) {
     return [];
@@ -237,6 +242,56 @@ function extractWebhookCandidates(workflow) {
       };
     })
     .filter(Boolean);
+}
+
+function extractFormTriggerCandidates(workflow, baseUrl) {
+  if (!Array.isArray(workflow?.nodes)) {
+    return [];
+  }
+
+  return workflow.nodes
+    .filter((node) => String(node?.type || "").toLowerCase().includes("formtrigger"))
+    .map((node) => {
+      const params = node.parameters || {};
+      const rawPath = params.path || params.formPath || params.slug || params.route || "";
+      const path = cleanPublicPath(rawPath);
+
+      if (!path) {
+        return null;
+      }
+
+      return {
+        mode: "form",
+        label: "Open form",
+        nodeName: node.name || "Form Trigger",
+        url: `${normalizeBaseUrl(baseUrl)}/form/${path}`
+      };
+    })
+    .filter(Boolean);
+}
+
+function detectDirectAction(workflow, baseUrl) {
+  if (!workflow?.active) {
+    return null;
+  }
+
+  const webhook = extractWebhookCandidates(workflow)[0];
+
+  if (webhook) {
+    return {
+      mode: "webhook",
+      label: "Run workflow",
+      ...webhook
+    };
+  }
+
+  const formTrigger = extractFormTriggerCandidates(workflow, baseUrl)[0];
+
+  if (formTrigger) {
+    return formTrigger;
+  }
+
+  return null;
 }
 
 function buildWebhookUrl(baseUrl, path) {
@@ -278,9 +333,9 @@ async function openWorkflowTab(workflowId) {
 
 async function runWorkflow(workflowId) {
   const { workflow, settings } = await getWorkflow(workflowId);
-  const webhooks = extractWebhookCandidates(workflow);
+  const directAction = detectDirectAction(workflow, settings.baseUrl);
 
-  if (!workflow?.active || webhooks.length === 0) {
+  if (!directAction) {
     const opened = await openWorkflowTab(workflowId);
     return {
       action: "opened",
@@ -290,13 +345,22 @@ async function runWorkflow(workflowId) {
     };
   }
 
-  const chosenWebhook = webhooks[0];
-  const result = await triggerWebhook(settings.baseUrl, chosenWebhook);
+  if (directAction.mode === "form") {
+    await extApi.tabs.create({ url: directAction.url });
+    return {
+      action: "opened-form",
+      workflow: summarizeWorkflow(workflow, settings.baseUrl),
+      detail: directAction.url,
+      url: directAction.url
+    };
+  }
+
+  const result = await triggerWebhook(settings.baseUrl, directAction);
 
   return {
     action: "launched",
     workflow: summarizeWorkflow(workflow, settings.baseUrl),
-    detail: `${chosenWebhook.method} ${buildWebhookUrl(settings.baseUrl, chosenWebhook.path)}`,
+    detail: `${directAction.method} ${buildWebhookUrl(settings.baseUrl, directAction.path)}`,
     status: result.status
   };
 }

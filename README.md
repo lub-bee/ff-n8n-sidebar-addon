@@ -31,7 +31,14 @@ A workflow is considered launchable when:
 - it is active
 - it exposes at least one webhook node
 
+Or:
+
+- it is active
+- it exposes a public form trigger with a usable path
+
 For launchable workflows, the extension triggers the first detected webhook.
+
+For public form workflows, the extension opens the production form URL directly.
 
 For non-launchable workflows, the extension opens the workflow page in n8n.
 

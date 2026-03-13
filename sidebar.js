@@ -303,6 +303,8 @@ async function handleWorkflowAction(workflowId) {
 
     if (result.action === "launched") {
       showToast("success", `"${result.workflow.name}" launched`, result.detail);
+    } else if (result.action === "opened-form") {
+      showToast("success", `Opened form for "${result.workflow.name}"`, result.detail);
     } else {
       showToast("success", `Opened "${result.workflow.name}" in n8n`, result.detail);
     }
